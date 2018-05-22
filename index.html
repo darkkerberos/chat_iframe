@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Parent Window</title>
+	<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css'>
+	<style>
+		.container {
+			padding:10px;
+		}
+		.iframe:nth-of-type(odd){
+			padding:5px;
+			text-align:left;
+			float:left;
+		}
+		.iframe:nth-of-type(even){
+			padding:5px;
+			text-align:right;
+			float:right;
+		}
+	</style>
+</head>
+<body>
+	<main role="main" class="container">
+		<div class='row'>
+			<div class='col-md-12'>
+				<button class='btn btn-primary btn-block' id='add'>+</button>
+			</div>
+		</div>
+		<div class='row ' id='iframe-container'>
+			
+		</div>
+
+    </main>
+
+    <script>
+		var selected = null, // Object of the element to be moved
+		x_pos = 0, y_pos = 0, // Stores x & y coordinates of the mouse pointer
+		x_elem = 0, y_elem = 0; // Stores top, left values (edge) of the element
+
+		// Will be called when user starts dragging an element
+		function _drag_init(elem) {
+			// Store the object of the element which needs to be moved
+			selected = elem;
+			x_elem = x_pos - selected.offsetLeft;
+			y_elem = y_pos - selected.offsetTop;
+		}
+
+		// Will be called when user dragging an element
+		function _move_elem(e) {
+			x_pos = document.all ? window.event.clientX : e.pageX;
+			y_pos = document.all ? window.event.clientY : e.pageY;
+			if (selected !== null) {
+				selected.style.left = (x_pos - x_elem) + 'px';
+				selected.style.top = (y_pos - y_elem) + 'px';
+			}
+		}
+
+		// Destroy the object when we are done
+		function _destroy() {
+			selected = null;
+		}
+		var add = document.getElementById('add');
+		var tempMessage = '';
+		function bindEvent(element, eventName, eventHandler) {
+            if (element.addEventListener) {
+                element.addEventListener(eventName, eventHandler, false);
+            } else if (element.attachEvent) {
+                element.attachEvent('on' + eventName, eventHandler);
+            }
+        }
+		bindEvent(add, 'click', function(e){
+			var iframe_container = document.getElementById('iframe-container');
+			var countIframe = iframe_container.getElementsByTagName('iframe').length + 1;
+			var newIframe = "<div class='col-md-12 iframe'><iframe id='iframe" + countIframe + "' sandbox='allow-modals allow-forms allow-popups allow-scripts allow-same-origin' width='400px' height='400px' border=0></iframe></div>";
+			iframe_container.innerHTML += newIframe;
+			var iframeNum = 'iframe'+countIframe;
+			var iframeId = document.getElementById(iframeNum);
+			var frame_ = document.getElementById('iframe'+countIframe);
+			frame_.setAttribute('src', 'frame.html');
+			frame_.style.width = 500 + 'px';
+			frame_.style.height = 250 + 'px';
+			
+			//must settimeout, because when loaded first the message not show
+			//hate this, cz of this it tooks me for 3 days >.<
+			//-____- it works on load the frame so i change it
+			bindEvent(frame_, 'load', function(){
+				var txt = "<div class='col-md-12'><i>[system] " + iframeNum + " joined the chat.</i></div>";
+				if(document.getElementsByTagName('iframe').length > 0 ){
+					var iframe = document.getElementsByTagName('iframe');
+					var x = 1;
+					for (var i=0; i<iframe.length; i++) {
+						iframe[i].contentWindow.postMessage({ join: txt, chat: tempMessage}, '*');
+						var label = iframe[i].contentWindow.document.getElementById('label');
+						label.innerHTML = 'iframe'+x;
+						x++;
+					}
+				}
+			});
+		});
+		
+		
+		//listen data from iframe
+        bindEvent(window, 'message', function (e) {
+            tempMessage = e.data.div;
+			if(e.data.send){
+			//var txt = "<div class='col-md-12'><i>[system] " + iframeNum + " joined the chat.</i></div>";
+				setTimeout(function() {
+					if(document.getElementsByTagName('iframe').length > 0 ){
+						var iframe = document.getElementsByTagName('iframe');
+						for (var i=0; i<iframe.length; i++) {
+							iframe[i].contentWindow.postMessage({ join: '', chat: tempMessage}, '*');						
+						}
+					}
+				},300);				
+			}
+			//console.log(tempMessage);
+        });
+    </script>
+</body>
+<script src='https://cdn.jsdelivr.net/npm/lodash@2.2.1/dist/lodash.min.js'></script>
+<script src='tes1-3.js'></script>
+</html>

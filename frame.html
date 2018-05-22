@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>iframe Window</title>
+		<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css'>
+		<link rel="stylesheet" href="chat.css">
+		<style>
+			.chat-content div:nth-of-type(odd){
+				padding:5px;
+				text-align:left;
+				float:left;
+			}
+			.chat-content div:nth-of-type(even){
+				padding:5px;
+				text-align:right;
+				float:right;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row"><div class="col-md-12">
+				<div class="chat-content" id="chat-content"></div>
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<label class="input-group-text" for="messagetext" id='label'></label>
+				</div>
+				<input type="text" class="form-control" placeholder="" value="" id='messagetext'>
+				<div class="input-group-append">
+					<button class='btn btn-primary' id='message_button'>Send</button>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			var frameid = '';
+			// addEventListener support for IE8
+			window.addEventListener("load", function () {
+				function bindEvent(element, eventName, eventHandler) {
+					if (element.addEventListener) {
+						element.addEventListener(eventName, eventHandler, false);
+						} else if (element.attachEvent) {
+						element.attachEvent('on' + eventName, eventHandler);
+					}
+				}
+				// Send a message to the parent
+				var sendMessage = function (msg) {
+					window.parent.postMessage(msg, '*');
+				};
+				var results = document.getElementById('chat-content'),
+				messageButton = document.getElementById('message_button');
+				frameid = label.innerHTML;
+				label = document.getElementById('label');
+				// Listen to messages from parent window
+				var txtmessage = document.getElementById('messagetext');
+				bindEvent(window, 'message', function (e) {
+					//var reslen = results.innerHTML.length;
+					var chat = e.data.chat;
+					var join = e.data.join;
+					results.innerHTML = chat + join;
+					//setTimeout(function() {
+						sendMessage({ div : results.innerHTML});
+					//}, 800);
+					
+				});
+				
+				// Send message data on every button click
+				bindEvent(messageButton, 'click', function (e) {
+					var chatText = document.getElementById('messagetext').value;
+					var div = document.createElement('div');
+					var frame = label.innerHTML;
+					div.innerHTML = "<div class='col-md-12'>[" + frame + "] - " + chatText + "</div>";
+					results.appendChild(div);
+					sendMessage({ div : results.innerHTML, send : true});
+				});
+			});
+		</script>
+	</body>
+</html>
